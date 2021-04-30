@@ -3,7 +3,7 @@ ui <- fluidPage(
   sidebarLayout(
     sidebarPanel(
       width=3,
-      h4("mediation-explorer"),
+      h4("mediation-net"),
       tags$hr(),
       h5("Explore Mediation Results from $FuturePaperID"),
       tags$hr(),
