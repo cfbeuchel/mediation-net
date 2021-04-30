@@ -22,26 +22,54 @@ server <- function(input, output, session) {
     
   })
   
-  # PM Input Slider ----
-  observeEvent(input$slider, {
+  # Input Sync ----
+  observeEvent({input$slider_num}, {
+    if(input$slider_num != input$slider){
+      values$pm <- input$slider_num
+      updateSliderInput(session, "slider",value = values$pm)
+    }
+  })
+  observeEvent({input$slider}, {
+    if(input$slider_num != input$slider){
+      values$pm <- input$slider
+      updateNumericInput(session, "slider_num",value = values$pm)
+    }
     
+  })
+  
+  
+  # PM Input Slider ----
+  observeEvent({input$slider | input$slider_num}, {
+      
+    validate(
+      need(
+        expr = input$slider == input$slider_num,
+        message = "Syncing sliders..."
+        )
+    )
+    
+    # debug
     # pm <-.6 
     # possible_genes <- dat[quot.dir.vs.raw.metab >= pm | quot.dir.vs.raw.gx >= pm, unique(gene)]
     # possible_metabolites <- dat[gene %in% possible_genes, unique(metabolite)]
     
-    values$pm <- input$slider
+    # values$pm <- input$slider
     values$possible_genes <- values$dat[quot.dir.vs.raw.metab >= values$pm | quot.dir.vs.raw.gx >= values$pm, unique(gene)]
     values$selected_genes <- values$selected_genes[values$selected_genes %in% c("All", values$possible_genes)]
-    values$possible_metabolites <- values$dat[gene %in% values$selected_genes & (quot.dir.vs.raw.metab >= values$pm | quot.dir.vs.raw.gx >= values$pm), unique(metabolite)]
-    values$selected_metabolites <- values$selected_metabolites[values$selected_metabolites %in% c("All", values$possible_metabolites)]
     
-    # output$error <- renderText(
-    #   validate(
-    #     need(expr = uniqueN(values$possible_genes) >= 1 & uniqueN(values$possible_metabolites) >= 1,
-    #          message = "Filter to strict, no genes or metabolites to select! Reduce PM filter.")
-    #   )
-    # )
+    # if "All" is in selected genes, get all genes and disregard filter
+    if("All" %in% values$selected_genes){
+      
+      values$possible_metabolites <- values$dat[(quot.dir.vs.raw.metab >= values$pm | quot.dir.vs.raw.gx >= values$pm), unique(metabolite)]
+      
+    } else {
+      
+      # filter possible metabolites by mediating with selected genes and PM filter
+      values$possible_metabolites <- values$dat[gene %in% values$selected_genes & (quot.dir.vs.raw.metab >= values$pm | quot.dir.vs.raw.gx >= values$pm), unique(metabolite)]
+      
+    }
     
+    # Update Gene/Metabolite Input ----
     updateSelectInput(
       session, 
       "selected_genes",
@@ -57,31 +85,31 @@ server <- function(input, output, session) {
     
   })
   
-  # Metabolite Input Slider ----
+  # Metabolite Input ----
   observeEvent({
     input$selected_metabolites
   }, {
     
-    # output$error <- renderText(
-    #   validate(
-    #     need(
-    #       expr = uniqueN(values$possible_metabolites) >=1, 
-    #       message = "Filter to strict, no metabolites to select! Reduce PM filter."))
-    # )
+    output$error <- renderText(
+      validate(
+        need(
+          expr = uniqueN(input$selected_metabolites) >=1,
+          message = "Nothing selected! Reduce PM filter and/or select a metabolite."))
+    )
     
     values$selected_metabolites <- input$selected_metabolites
     
   })
   
-  # Gene Input Slider ----
+  # Gene Input ----
   observeEvent(input$selected_genes, {
     
-    # output$error <- renderText(
-    #   validate(
-    #     need(
-    #       expr = uniqueN(values$possible_genes) >= 1, 
-    #       message = "Filter to strict, no genes to select! Reduce PM filter."))
-    # )
+    output$error <- renderText(
+      validate(
+        need(
+          expr = uniqueN(input$selected_genes) >= 1,
+          message = "Nothing selected! Reduce PM filter and/or select a gene."))
+    )
     
     # set new selected genes
     values$selected_genes <- input$selected_genes
@@ -146,11 +174,11 @@ server <- function(input, output, session) {
     
     network_dat <- network_dat[metabolite %in% c(selected_metabolites, NA), ]
     
-    message(paste(dim(network_dat), collapse = ", "))
-    message(paste(dim(dat), collapse = ", "))
-    message(paste(selected_genes, collapse = ", "))
-    message(paste(selected_metabolites, collapse = ", "))
-    
+    # debug messages
+    # message(paste(dim(network_dat), collapse = ", "))
+    # message(paste(dim(dat), collapse = ", "))
+    # message(paste(selected_genes, collapse = ", "))
+    # message(paste(selected_metabolites, collapse = ", "))
     
     output$network <- renderPlot({
       validate(
@@ -170,15 +198,6 @@ server <- function(input, output, session) {
     width = 1024,
     height = 1024
     )
-    
-    # output$preview <- DT::renderDataTable({
-    #   validate(
-    #     need(expr = network_dat, message = "No data!"),
-    #     need(expr = nrow(network_dat) >=1, message = "No data!")
-    #   )
-    #   network_dat
-    # }, options = list(pageLength = 10)) 
-    
     
   })
   

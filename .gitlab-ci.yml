@@ -1,0 +1,6 @@
+include:
+- project: 'lha/util/shiny-app-build'
+  file: 'gitlab-ci.yml'
+- project: 'lha/util/shiny-app-deploy'
+  file: 'gitlab-ci.yml'
+

@@ -1,41 +1,47 @@
 
 ui <- fluidPage(
-  titlePanel("Mediation Explorer"),
   sidebarLayout(
-    sidebarPanel(width=3,
-      helpText("Explore Mediation Results from "),
+    sidebarPanel(
+      width=3,
+      h4("mediation-explorer"),
       tags$hr(),
-      sliderInput("slider",
-                  label = "Required Proportion mediated of genes:",
+      h5("Explore Mediation Results from $FuturePaperID"),
+      tags$hr(),
+      numericInput(inputId = "slider_num", 
+                   label = "Required Proportion Mediated (PM):",
+                   value = 0.2, 
+                   min = 0, 
+                   step = 0.01,
+                   max = 1),
+      sliderInput(inputId = "slider",
+                  label = NULL,
                   min = 0,
                   max = 1,
                   value = 0.2,
                   step = 0.05,
                   sep = "."),
       textOutput("error"),
+      tags$hr(),
+      h5("Show Mediations For These:"),
       selectInput(
         inputId = "selected_genes",
-        label = "Show Mediations For These Genes", 
+        label = "Selected Genes:", 
         choices = "All", 
         multiple = T, 
         selected = "All"
           ),
       selectInput(
         inputId = "selected_metabolites",
-        label = "Show Mediations For These Metabolites", 
+        label = "Selected Metabolites:", 
         choices = c("All"),
         multiple = T, 
         selected = "All"
           ),
       actionButton(inputId = "calculate_network", 
                    label = "Show Network"),
-      tags$hr(),
-      downloadButton("download_data", "Download Data", class = "butt")
+      tags$hr()
     ),
-    # mainPanel(O visNetworkOutput("network"))
-    mainPanel(shiny::plotOutput("network")
-              # DT::dataTableOutput("preview")
-              )
+    mainPanel(shiny::plotOutput("network"))
   )
 )
 
