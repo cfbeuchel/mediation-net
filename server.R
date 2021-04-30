@@ -205,11 +205,9 @@ server <- function(input, output, session) {
       validate(
         need(expr = length(selected_genes) >= 1 | length(selected_metabolites) >= 1, message = "No genes/metabolites selected!"),
         need(expr = nrow(network_dat) >= 1, message = "No mediations for selection! Change filter and/or metabolite/gene selection!"),
-        need(expr = nrow(network_dat) <= 600, message = "Network too large for this puny application!"),
-        need(expr = uniqueN(network_dat$gene) >=1, message = sample(error_messages, 1)),
-        need(expr = uniqueN(network_dat$metabolite) >=1, message = sample(error_messages, 1)),
-        need(expr = !is.null(network_dat), message = sample(error_messages, 1)),
-        need(expr = !is.null(dat), message = sample(error_messages, 1))
+        need(expr = nrow(network_dat) <= 600, message = "Network too large for this puny application! Please apply PM filter or select specific genes/metabolites!"),
+        need(expr = (uniqueN(network_dat$gene) >=1) & (uniqueN(network_dat$metabolite) >=1), message = sample(error_messages, 1)),
+        need(expr = !is.null(network_dat) & !is.null(dat), message = sample(error_messages, 1))
       )
       mediation_network(
         d2 = dat,
