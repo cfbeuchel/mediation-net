@@ -10,15 +10,35 @@ server <- function(input, output, session) {
   # at startup
   observeEvent("", {
     
+    # load mediation data and store it
     values$dat <- fread("data/plotData.tsv")
-    values$pm <- 0.2
+    
+    # set executable default PM (will build network, but is fairly large)
+    values$pm <- 0.25
+    
+    # filter possible genes/metabolites based on PM filter
     values$possible_genes <- values$dat[quot.dir.vs.raw.metab >= values$pm | quot.dir.vs.raw.gx >= values$pm, unique(gene)]
     values$possible_metabolites <- values$dat[gene %in% values$possible_genes & (quot.dir.vs.raw.metab >= values$pm | quot.dir.vs.raw.gx >= values$pm), unique(metabolite)]
+    
+    # set default selection to everything
     values$selected_genes <- "All"
     values$selected_metabolites <- "All"
     
+    # supply slider with possible genes/metabolites, but keep selection to "All"
     updateSelectInput(session, "selected_genes", choices = c("All", values$possible_genes), selected = "All")
     updateSelectInput(session, "selected_metabolites", choices = c("All", values$possible_metabolites), selected = "All")
+    
+    values$error_messages <- c(
+      "Error! Unknown life-form detected on board!",
+      "Error! Radiation leak detected!",
+      "Error! Critical core-temperature has been exceeded!",
+      "Error! Self-destruction imminent!",
+      "Error! Proximity altert! Collision imminent!",
+      "Error! Oxygen levels reaching critical levels!",
+      "Error! Hull-breach detected on Deck 4!",
+      "Error! Intrusion altert!",
+      "Error! Manual override required!"
+    )
     
   })
   
@@ -138,6 +158,7 @@ server <- function(input, output, session) {
   
   observeEvent(input$calculate_network, {
     
+    error_messages <- isolate(values$error_messages)
     selected_genes <- isolate(input$selected_genes)
     selected_metabolites <- isolate(input$selected_metabolites)
     pm <- isolate(values$pm)
@@ -155,7 +176,6 @@ server <- function(input, output, session) {
     output$error <- renderText(
       validate(
         need(expr = nrow(dat) >=1, message = "Not enough data to build network! Please choose another filter!"),
-        need(expr = !is.null(dat), message = "Error! Please Retry"),
         need(expr = length(selected_genes) >= 1 | length(selected_metabolites) >= 1, message = "No mediations for selection!")
       )
     )
@@ -181,14 +201,15 @@ server <- function(input, output, session) {
     # message(paste(selected_metabolites, collapse = ", "))
     
     output$network <- renderPlot({
+      
       validate(
-        need(expr = length(selected_genes) >= 1 | length(selected_metabolites) >= 1, message = "No mediations for selection!"),
-        need(expr = nrow(network_dat) >= 1, message = "No mediations for selection!"),
-        need(expr = nrow(network_dat) <= 500, message = "Network too large!"),
-        need(expr = uniqueN(network_dat$gene) >=1, message = "Error!"),
-        need(expr = uniqueN(network_dat$metabolite) >=1, message = "Error!"),
-        need(expr = !is.null(network_dat), message = "Error!"),
-        need(expr = !is.null(dat), message = "Error!")
+        need(expr = length(selected_genes) >= 1 | length(selected_metabolites) >= 1, message = "No genes/metabolites selected!"),
+        need(expr = nrow(network_dat) >= 1, message = "No mediations for selection! Change filter and/or metabolite/gene selection!"),
+        need(expr = nrow(network_dat) <= 600, message = "Network too large for this puny application!"),
+        need(expr = uniqueN(network_dat$gene) >=1, message = sample(error_messages, 1)),
+        need(expr = uniqueN(network_dat$metabolite) >=1, message = sample(error_messages, 1)),
+        need(expr = !is.null(network_dat), message = sample(error_messages, 1)),
+        need(expr = !is.null(dat), message = sample(error_messages, 1))
       )
       mediation_network(
         d2 = dat,
