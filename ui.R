@@ -22,7 +22,7 @@ ui <- fluidPage(
                   sep = "."),
       textOutput("error"),
       tags$hr(),
-      h5("Show Mediations For These:"),
+      h5("Show Mediations For These Features"),
       selectInput(
         inputId = "selected_genes",
         label = "Selected Genes:", 
@@ -38,8 +38,7 @@ ui <- fluidPage(
         selected = "All"
           ),
       actionButton(inputId = "calculate_network", 
-                   label = "Show Network"),
-      tags$hr()
+                   label = "Show Network")
     ),
     mainPanel(shiny::plotOutput("network"))
   )
