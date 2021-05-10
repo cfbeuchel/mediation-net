@@ -1,3 +1,3 @@
 # Mediation-Explorer
 
-* lha gitlab, ci starten
+This is basically a Supplementary Figure for a publication in preparation.
