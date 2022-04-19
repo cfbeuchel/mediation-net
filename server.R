@@ -119,10 +119,35 @@ server <- function(input, output, session) {
     
     values$selected_metabolites <- input$selected_metabolites
     
+    # in addition, filter selection of genes based on selected metabolites
+    
+    # ----
+    if("All" %in% values$selected_metabolites){
+      
+      values$possible_genes <- values$dat[(quot.dir.vs.raw.metab >= values$pm | quot.dir.vs.raw.gx >= values$pm), unique(gene)]
+      
+    } else {
+      
+      # filter possible metabolites by mediating with selected genes and PM filter
+      values$possible_genes <- values$dat[metabolite %in% values$selected_metabolites & (quot.dir.vs.raw.metab >= values$pm | quot.dir.vs.raw.gx >= values$pm), unique(gene)]
+      
+    }
+    
+    # update metabolite slider with new possible metabolites and filter selection if applies
+    updateSelectInput(session, 
+                      "selected_genes",
+                      choices = c("All", values$possible_genes), 
+                      selected = values$selected_genes[values$selected_genes %in% c("All", values$possible_genes)]
+    ) 
+    
+    # ----
+    
   })
   
   # Gene Input ----
-  observeEvent(input$selected_genes, {
+  observeEvent({
+    input$selected_genes
+  }, {
     
     output$error <- renderText(
       validate(
@@ -164,6 +189,7 @@ server <- function(input, output, session) {
     pm <- isolate(values$pm)
     dat <- isolate(values$dat)
     
+    # ignore previous selection and choose all genes/metabolites when "All" is selected (in addition to other features)
     if("All" %in% selected_genes){
       # selected_genes <- "SERPINA13P"
       selected_genes <- dat[quot.dir.vs.raw.metab >= pm | quot.dir.vs.raw.gx >= pm, unique(gene)]
@@ -186,8 +212,9 @@ server <- function(input, output, session) {
     #   need(expr = length(selected_genes) >= 1 | length(selected_metabolites) >= 1, message = "No mediations for selection!")
     # )
     
+    # create network data based on selected genes & metabolites as well as on selected PM
     network_dat <- create_mediation_network_data(
-      d2 = dat,
+      d2 = dat[quot.dir.vs.raw.metab >= pm | quot.dir.vs.raw.gx >= pm],
       gene.filter = selected_genes,
       show.weak = TRUE,
       save.table = FALSE)
